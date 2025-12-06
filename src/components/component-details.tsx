@@ -48,7 +48,7 @@ export default function ComponentDetails({
 		const loadCode = async () => {
 			try {
 				const response = await fetch(
-					`/r/${preferredFramework.toLowerCase()}/${component.name}.json`,
+					`/r/${preferredFramework?.toLowerCase() ?? 'react'}/${component.name}.json`,
 					{
 						signal: controller.signal,
 					},

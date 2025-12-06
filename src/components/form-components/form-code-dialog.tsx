@@ -123,7 +123,7 @@ function CodeDialog() {
 	const mutation = useMutation<CreateRegistryResponse, Error, void>({
 		mutationKey: ["/create-command", formName],
 		mutationFn: async (): Promise<CreateRegistryResponse> => {
-			const res = await fetch(`${getRegistryUrl()}/r/${formName}`, {
+			const res = await fetch(`/r/${formName}`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
