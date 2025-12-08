@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
-import { useFormStore } from "@/hooks/use-form-store";
+import { setFormElements, setFormName } from "@/services/form-builder.service";
 import { clientTools } from "@tanstack/ai-client";
 import { generateFormDef } from "@/lib/ai/form-tools";
 import { v4 as uuid } from "uuid";
@@ -11,7 +11,6 @@ import { v4 as uuid } from "uuid";
 import { useState } from "react";
 
 export function FormGenerator() {
-	const { actions } = useFormStore();
 	const [input, setInput] = useState("");
 	const [formMetadata, setFormMetadata] = useState<{
 		title?: string;
@@ -38,12 +37,12 @@ export function FormGenerator() {
 			});
 
 			// Update form store
-			actions.setFormElements(elementsWithIds as any);
+			setFormElements(elementsWithIds as any);
 
 			// Update form metadata
 			setFormMetadata({ title, description });
 			if (title) {
-				actions.setFormName(title.toLowerCase().replace(/\s+/g, "_"));
+				setFormName(title.toLowerCase().replace(/\s+/g, "_"));
 			}
 
 			// Return success
