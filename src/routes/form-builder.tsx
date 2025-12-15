@@ -6,14 +6,14 @@ import Loader from "@/components/loader";
 import { NotFound } from "@/components/not-found";
 import type { FormElementsSchema } from "@/lib/search-schema";
 import { seo } from "@/utils/seo";
-import { initializeFormBuilder } from "@/services/form-builder.service";
+import { initializeFormBuilder, resetFormElements } from "@/services/form-builder.service";
 
 export const Route = createFileRoute("/form-builder")({
 	head: () => ({
 		meta: [...seo({ title: "Form Builder | TanCN - Form and Table Builder" })],
 	}),
 	component: FormBuilderLayout,
-	errorComponent: ErrorBoundary,
+	errorComponent: (props) => <ErrorBoundary {...props} reset={() => resetFormElements()}/>,
 	notFoundComponent: NotFound,
 	loader: ({
 		location,

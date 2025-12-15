@@ -24,15 +24,15 @@ import { SettingsGearIcon } from "@/components/ui/settings-gear";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useScreenSize } from "@/hooks/use-screen-size";
 import useSettings from "@/hooks/use-settings";
-import { setActiveTab } from "@/services/form-builder.service";
+import { resetFormElements, setActiveTab } from "@/services/form-builder.service";
 
 export const Route = createFileRoute("/form-builder/")({
 	head: () => ({
 		meta: [],
 	}),
 	component: FormBuilderComponent,
-	errorComponent: ErrorBoundary,
 	pendingComponent: Loader,
+	errorComponent: ({reset ,...props}) => <ErrorBoundary {...props} reset={() =>{resetFormElements();reset()}}/>
 });
 
 function FormBuilderComponent() {
@@ -66,36 +66,40 @@ function FormBuilderComponent() {
 	const TabNavigation = () => (
 		<div className="flex gap-2 p-4 lg:h-14 justify-center items-center content-center text-center self-center w-full border-y border-border">
 			<AnimatedIconButton
-				icon={<BlocksIcon className="-ms-0.5 me-1.5 opacity-60" size={16} />}
-				text={sidebarWidth > 350 || isMobile || isTablet ? "Builder" : ""}
+				icon={<BlocksIcon className="-ms-0.5 opacity-60" size={16} />}
+				text={sidebarWidth > 420 || isMobile || isTablet ? "Builder" : ""}
 				variant={activeTab === "builder" ? "default" : "ghost"}
 				onClick={() => handleSubTabChange("builder")}
+				className="px-2 me-1.5"
 				size="sm"
 			/>
 			<AnimatedIconButton
 				icon={
-					<LayoutPanelTopIcon className="-ms-0.5 me-1.5 opacity-60" size={16} />
+					<LayoutPanelTopIcon className="-ms-0.5  opacity-60" size={16} />
 				}
-				text={sidebarWidth > 350 || isMobile || isTablet ? "Template" : ""}
+				text={sidebarWidth > 420 || isMobile || isTablet ? "Template" : ""}
 				variant={activeTab === "template" ? "default" : "ghost"}
 				onClick={() => handleSubTabChange("template")}
 				size="sm"
+								className="px-2 me-1.5"
 			/>
 			<AnimatedIconButton
 				icon={
-					<SettingsGearIcon className="-ms-0.5 me-1.5 opacity-60" size={16} />
+					<SettingsGearIcon className="-ms-0.5  opacity-60" size={16} />
 				}
-				text={sidebarWidth > 350 || isMobile || isTablet ? "Settings" : ""}
+				text={sidebarWidth > 420 || isMobile || isTablet ? "Settings" : ""}
 				variant={activeTab === "settings" ? "default" : "ghost"}
 				onClick={() => handleSubTabChange("settings")}
 				size="sm"
+								className="px-2 me-1.5"
 			/>
 			<AnimatedIconButton
-				icon={<Sparkles className="-ms-0.5 me-1.5 opacity-60" size={16} />}
-				text={sidebarWidth > 350 || isMobile || isTablet ? "Generate" : ""}
+				icon={<Sparkles className="-ms-0.5 opacity-60" size={16} />}
+				text={sidebarWidth > 420 || isMobile || isTablet ? "Generate" : ""}
 				variant={activeTab === "generate" ? "default" : "ghost"}
 				onClick={() => handleSubTabChange("generate")}
 				size="sm"
+								className="px-2 me-1.5"
 			/>
 		</div>
 	);
@@ -109,7 +113,7 @@ function FormBuilderComponent() {
 					{/* Sidebar Section */}
 					<div className="border-b border-border">
 						<TabNavigation />
-						<div className="h-[calc(35vh-8rem)]">{renderSidebarContent()}</div>
+						<div className="h-[calc(60vh-8rem)]">{renderSidebarContent()}</div>
 					</div>
 
 					{/* Editor Section */}
@@ -210,7 +214,7 @@ function FormBuilderComponent() {
 				{/* Sidebar Panel - Full Height */}
 				<ResizablePanel
 					ref={sidebarRef}
-					defaultSize={20}
+					defaultSize={25}
 					minSize={15}
 					maxSize={35}
 					className="bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60 border-r"

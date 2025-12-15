@@ -80,7 +80,7 @@ export function TemplateSidebar() {
 				<p className="text-sm text-muted-foreground">Predefined Template's</p>
 			</div>
 			<ScrollArea className="flex-1 min-h-0">
-				<div className="p-3 sm:p-4 space-y-4 sm:space-y-6">
+				<div className="px-3 sm:p-4 space-y-4 sm:space-y-6">
 					{/* Saved Forms */}
 					{savedForms.length > 0 && (
 						<div>

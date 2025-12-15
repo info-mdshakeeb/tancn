@@ -69,7 +69,7 @@ export function FieldTab() {
 				</p>
 			</div>
 			<ScrollArea className="flex-1 min-h-0">
-				<div className="">
+				<div className="px-3">
 					{/* Field Elements Group */}
 					{groupedElements.field && (
 						<div>

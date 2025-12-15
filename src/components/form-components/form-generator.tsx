@@ -234,7 +234,7 @@ export function FormGenerator() {
 			</div>
 
 			<ScrollArea className="flex-1 min-h-0">
-				<div className="p-4 space-y-6">
+				<div className="p-4 space-y-6 px-3">
 					{messages.length === 0 ? (
 						<>
 							<div className="space-y-4">
