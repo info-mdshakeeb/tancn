@@ -6,7 +6,10 @@ import {
 	type FormElements,
 	formBuilderCollection,
 } from "@/db-collections/form-builder.collections";
-import { DEFAULT_FORM_ELEMENTS, DEFAULT_FORM_SETTINGS } from "@/services/form-builder.service";
+import {
+	DEFAULT_FORM_ELEMENTS,
+	DEFAULT_FORM_SETTINGS,
+} from "@/services/form-builder.service";
 
 const defaultFormBuilderState: Omit<FormBuilder, "id"> = {
 	formName: "draft",

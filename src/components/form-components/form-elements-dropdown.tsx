@@ -79,16 +79,18 @@ export function FormElementsDropdown({
 			<DropdownMenuContent data-align="end" className="p-0">
 				<ScrollArea className="h-64">
 					<div className="space-y-3 p-3">
-						{formElementsList.map((o) => (
-							<DropdownMenuItem
-								onSelect={() => handleAddingElement(o.fieldType)}
-								key={o.name}
-								disabled={!!o.static}
-								className="px-4"
-							>
-								{o.name}
-							</DropdownMenuItem>
-						))}
+						{formElementsList
+							.filter((o) => !o.static)
+							.map((o) => (
+								<DropdownMenuItem
+									onSelect={() => handleAddingElement(o.fieldType)}
+									key={o.name}
+									disabled={!!o.static}
+									className="px-4"
+								>
+									{o.name}
+								</DropdownMenuItem>
+							))}
 					</div>
 				</ScrollArea>
 			</DropdownMenuContent>
@@ -284,21 +286,24 @@ export function UnifiedFormElementsDropdown({
 			<DropdownMenuContent data-align="end" className="p-0">
 				<ScrollArea className="h-64">
 					<div className="space-y-3 p-3">
-						{formElementsList.map((o) => (
-							<DropdownMenuItem
-								onSelect={(e) => {
-									if (context === "multistep") {
-										e.preventDefault(); // Prevent the menu from closing for multistep
-									}
-									handleElementSelect(o.fieldType as FormElement["fieldType"]);
-								}}
-								key={o.name}
-								disabled={!!o.static}
-								className="px-4"
-							>
-								{o.name}
-							</DropdownMenuItem>
-						))}
+						{formElementsList
+							.filter((o) => context === "multistep" || !o.static)
+							.map((o) => (
+								<DropdownMenuItem
+									onSelect={(e) => {
+										if (context === "multistep") {
+											e.preventDefault(); // Prevent the menu from closing for multistep
+										}
+										handleElementSelect(
+											o.fieldType as FormElement["fieldType"],
+										);
+									}}
+									key={o.name}
+									className="px-4"
+								>
+									{o.name}
+								</DropdownMenuItem>
+							))}
 					</div>
 				</ScrollArea>
 			</DropdownMenuContent>

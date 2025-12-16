@@ -10,9 +10,9 @@ import { NotFound } from "@/components/not-found";
 import SponsorBanner from "@/components/sponsor-banner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import DevTools from "@/integrations/tanstack-query/devtools";
 import { seo } from "@/utils/seo";
 import appCss from "../styles.css?url";
-import DevTools from "@/integrations/tanstack-query/devtools";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -193,7 +193,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 							{children}
 						</div>
 					</main>
-					{import.meta.env.DEV && typeof window !== 'undefined' && <DevTools />}
+					{import.meta.env.DEV && typeof window !== "undefined" && <DevTools />}
 					<Toaster richColors />
 				</ThemeProvider>
 				<Scripts />

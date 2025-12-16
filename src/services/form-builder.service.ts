@@ -718,7 +718,7 @@ export const reorder: ReorderElements = (options) => {
 export const resetFormElements = (): boolean => {
 	try {
 		formBuilderCollection.update(FORM_ID, (draft) => {
-      draft.isMS = false;
+			draft.isMS = false;
 			draft.formElements = [];
 		});
 		return true;

@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/a11y/noLabelWithoutControl: no needed */
 
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { createClientOnlyFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -35,9 +34,8 @@ import {
 	tableBuilderCollection,
 } from "@/db-collections/table-builder.collections";
 import { useScreenSize } from "@/hooks/use-screen-size";
-
-import { seo } from "@/utils/seo";
 import { initializeTable } from "@/services/table-builder.service";
+import { seo } from "@/utils/seo";
 
 export const Route = createFileRoute("/table-builder")({
 	head: () => ({
@@ -62,9 +60,10 @@ function RouteComponent() {
 	const [activeTab, setActiveTab] = useState("columns");
 	const [shareDialogOpen, setShareDialogOpen] = useState(false);
 	const [sharedData, setSharedData] = useState<TableBuilder | null>(null);
-	const [isTableBuilderInitialized, setIsTableBuilderInitialized] =  useState(false);
+	const [isTableBuilderInitialized, setIsTableBuilderInitialized] =
+		useState(false);
 	useEffect(() => {
-		initializeTable()
+		initializeTable();
 		setIsTableBuilderInitialized(true);
 	}, []);
 

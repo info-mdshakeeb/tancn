@@ -24,7 +24,10 @@ import { SettingsGearIcon } from "@/components/ui/settings-gear";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useScreenSize } from "@/hooks/use-screen-size";
 import useSettings from "@/hooks/use-settings";
-import { resetFormElements, setActiveTab } from "@/services/form-builder.service";
+import {
+	resetFormElements,
+	setActiveTab,
+} from "@/services/form-builder.service";
 
 export const Route = createFileRoute("/form-builder/")({
 	head: () => ({
@@ -32,7 +35,15 @@ export const Route = createFileRoute("/form-builder/")({
 	}),
 	component: FormBuilderComponent,
 	pendingComponent: Loader,
-	errorComponent: ({reset ,...props}) => <ErrorBoundary {...props} reset={() =>{resetFormElements();reset()}}/>
+	errorComponent: ({ reset, ...props }) => (
+		<ErrorBoundary
+			{...props}
+			reset={() => {
+				resetFormElements();
+				reset();
+			}}
+		/>
+	),
 });
 
 function FormBuilderComponent() {
@@ -74,24 +85,20 @@ function FormBuilderComponent() {
 				size="sm"
 			/>
 			<AnimatedIconButton
-				icon={
-					<LayoutPanelTopIcon className="-ms-0.5  opacity-60" size={16} />
-				}
+				icon={<LayoutPanelTopIcon className="-ms-0.5  opacity-60" size={16} />}
 				text={sidebarWidth > 420 || isMobile || isTablet ? "Template" : ""}
 				variant={activeTab === "template" ? "default" : "ghost"}
 				onClick={() => handleSubTabChange("template")}
 				size="sm"
-								className="px-2 me-1.5"
+				className="px-2 me-1.5"
 			/>
 			<AnimatedIconButton
-				icon={
-					<SettingsGearIcon className="-ms-0.5  opacity-60" size={16} />
-				}
+				icon={<SettingsGearIcon className="-ms-0.5  opacity-60" size={16} />}
 				text={sidebarWidth > 420 || isMobile || isTablet ? "Settings" : ""}
 				variant={activeTab === "settings" ? "default" : "ghost"}
 				onClick={() => handleSubTabChange("settings")}
 				size="sm"
-								className="px-2 me-1.5"
+				className="px-2 me-1.5"
 			/>
 			<AnimatedIconButton
 				icon={<Sparkles className="-ms-0.5 opacity-60" size={16} />}
@@ -99,7 +106,7 @@ function FormBuilderComponent() {
 				variant={activeTab === "generate" ? "default" : "ghost"}
 				onClick={() => handleSubTabChange("generate")}
 				size="sm"
-								className="px-2 me-1.5"
+				className="px-2 me-1.5"
 			/>
 		</div>
 	);

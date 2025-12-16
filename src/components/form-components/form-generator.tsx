@@ -1,14 +1,16 @@
 import { clientTools } from "@tanstack/ai-client";
 import { fetchServerSentEvents, useChat } from "@tanstack/ai-react";
-import { Bot, Loader2, Send, Sparkles, User } from "lucide-react";
+import { Loader2, Send, Sparkles, User } from "lucide-react";
 import { useState } from "react";
 import { v4 as uuid } from "uuid";
+import * as z from "zod";
 import { AnimatedBotIcon } from "@/components/ui/animated-bot-icon";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAppForm } from "@/components/ui/tanstack-form";
 import { Textarea } from "@/components/ui/textarea";
 import { generateFormDef } from "@/lib/ai/form-tools";
 import {
@@ -17,8 +19,27 @@ import {
 	setIsMS,
 } from "@/services/form-builder.service";
 
+const formGeneratorSchema = z.object({
+	input: z.string().min(1, "Please describe your form"),
+});
+
 export function FormGenerator() {
-	const [input, setInput] = useState("");
+	const formGeneratorForm = useAppForm({
+		defaultValues: {
+			input: "",
+		},
+		validators: {
+			onDynamic: formGeneratorSchema,
+			onDynamicAsyncDebounceMs: 150,
+		},
+		onSubmit: async ({ value }) => {
+			if (value.input.trim()) {
+				sendMessage(value.input);
+				formGeneratorForm.reset();
+			}
+		},
+	});
+
 	const [formMetadata, setFormMetadata] = useState<{
 		title?: string;
 		description?: string;
@@ -210,20 +231,35 @@ export function FormGenerator() {
 		},
 	);
 
-	const { messages, sendMessage, isLoading, error } = useChat({
+	const { messages, sendMessage, isLoading } = useChat({
 		connection: fetchServerSentEvents("/api/ai"),
 		tools: clientTools(generateFormTool),
-	});
-	console.log(error);
-	// No useEffect needed - the client tool handles the action directly when called
+		onError: (err) => {
+			// Set the error on the form using the correct structure
+			formGeneratorForm.setErrorMap({
+				onDynamic: {
+					fields: {
+						input: {
+							message: err.message || "An error occurred during chat.",
+						},
+					},
+				},
+			});
 
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
-		if (input.trim() && !isLoading) {
-			sendMessage(input);
-			setInput("");
-		}
-	};
+			// Mark the field as touched so the error shows and border turns red
+			const fieldInfo = formGeneratorForm.getFieldInfo("input");
+			if (fieldInfo?.instance) {
+				fieldInfo.instance.setMeta((prev) => ({
+					...prev,
+					isTouched: true,
+				}));
+			}
+
+			console.error("Chat error:", err);
+		},
+	});
+
+	// No useEffect needed - the client tool handles the action directly when called
 	return (
 		<div className="flex flex-col h-full">
 			<div className="mb-4 p-4 border-b">
@@ -283,7 +319,10 @@ export function FormGenerator() {
 											}
 										>
 											{message.role === "assistant" ? (
-												<AnimatedBotIcon size={24} className={`${isLoading ? "rounded-full border-2 border-primary animate-pulse" : ""}`}/>
+												<AnimatedBotIcon
+													size={24}
+													className={`${isLoading ? "rounded-full border-2 border-primary animate-pulse" : ""}`}
+												/>
 											) : (
 												<User className="h-4 w-4" />
 											)}
@@ -380,46 +419,56 @@ export function FormGenerator() {
 			</ScrollArea>
 
 			<div className="p-4 border-t mt-auto">
-				<form onSubmit={handleSubmit} className="relative">
-					<Textarea
-						placeholder="Describe your form..."
-						className="min-h-[100px] resize-none pr-12 pb-12 bg-muted/50 border-none focus-visible:ring-1"
-						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" && !e.shiftKey) {
-								e.preventDefault();
-								handleSubmit(e);
-							}
-						}}
-					/>
+				<formGeneratorForm.AppForm>
+					<formGeneratorForm.Form className="relative">
+						<formGeneratorForm.AppField name="input">
+							{(field) => (
+								<field.Field>
+									<Textarea
+										name="input"
+										placeholder="Describe your form..."
+										className="min-h-[100px] resize-none pr-12 pb-12 bg-muted/50 border-none focus-visible:ring-1"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(e) => field.handleChange(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" && !e.shiftKey) {
+												e.preventDefault();
+												formGeneratorForm.handleSubmit();
+											}
+										}}
+									/>
+								</field.Field>
+							)}
+						</formGeneratorForm.AppField>
 
-					<div className="absolute bottom-3 left-3 flex gap-2">
+						<div className="absolute bottom-3 left-3 flex gap-2">
+							{/* <Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className="h-7 text-xs gap-1.5"
+								onClick={() => window.location.reload()}
+							>
+								<Sparkles className="w-3 h-3" />
+								New chat
+							</Button> */}
+							{/* <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+								<Image className="w-3 h-3" />
+								Image
+							</Button> */}
+						</div>
+
 						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							className="h-7 text-xs gap-1.5"
-							onClick={() => window.location.reload()}
+							type="submit"
+							size="icon"
+							disabled={isLoading}
+							className="absolute bottom-3 right-3 h-8 w-8 rounded-lg"
 						>
-							<Sparkles className="w-3 h-3" />
-							New chat
+							<Send className="w-4 h-4" />
 						</Button>
-						{/* <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-							<Image className="w-3 h-3" />
-							Image
-						</Button> */}
-					</div>
-
-					<Button
-						type="submit"
-						size="icon"
-						disabled={isLoading || !input.trim()}
-						className="absolute bottom-3 right-3 h-8 w-8 rounded-lg"
-					>
-						<Send className="w-4 h-4" />
-					</Button>
-				</form>
+					</formGeneratorForm.Form>
+				</formGeneratorForm.AppForm>
 			</div>
 		</div>
 	);

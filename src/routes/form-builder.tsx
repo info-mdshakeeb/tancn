@@ -5,15 +5,20 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import Loader from "@/components/loader";
 import { NotFound } from "@/components/not-found";
 import type { FormElementsSchema } from "@/lib/search-schema";
+import {
+	initializeFormBuilder,
+	resetFormElements,
+} from "@/services/form-builder.service";
 import { seo } from "@/utils/seo";
-import { initializeFormBuilder, resetFormElements } from "@/services/form-builder.service";
 
 export const Route = createFileRoute("/form-builder")({
 	head: () => ({
 		meta: [...seo({ title: "Form Builder | TanCN - Form and Table Builder" })],
 	}),
 	component: FormBuilderLayout,
-	errorComponent: (props) => <ErrorBoundary {...props} reset={() => resetFormElements()}/>,
+	errorComponent: (props) => (
+		<ErrorBoundary {...props} reset={() => resetFormElements()} />
+	),
 	notFoundComponent: NotFound,
 	loader: ({
 		location,

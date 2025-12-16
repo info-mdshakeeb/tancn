@@ -93,7 +93,18 @@ When the user describes a form or asks for changes, use the generate_form tool t
 export const Route = createFileRoute("/api/ai")({
 	server: {
 		handlers: {
-			POST: async ({ request }) => {
+			POST: async ({ request, context }) => {
+				const ip = request.headers.get("cf-connecting-ip") || "unknown";
+				const { success } = await context.env.AI_RATE_LIMITER.limit({
+					key: ip,
+				});
+				console.log("🚀 ~ success:", success, ip);
+				if (!success) {
+					return new Response("Rate limit exceeded. Try again later.", {
+						status: 429,
+					});
+				}
+
 				if (!process.env.GOOGLE_API_KEY) {
 					return new Response(
 						JSON.stringify({
@@ -116,10 +127,18 @@ export const Route = createFileRoute("/api/ai")({
 				try {
 					// Create a streaming chat response
 					const stream = chat({
-						adapter: gemini(),
+						adapter: gemini({
+							maxRetries: 2,
+							timeout: 30000, // 30 seconds
+						}),
 						messages,
 						model: "gemini-2.5-flash-lite",
 						conversationId,
+						providerOptions: {
+							generationConfig: {},
+						},
+						agentLoopStrategy: ({ iterationCount, finishReason }) =>
+							iterationCount >= 2 || finishReason !== undefined,
 						abortController: abortController,
 						tools: [generateFormDef],
 						systemPrompts: [SYSTEM_PROMPT],

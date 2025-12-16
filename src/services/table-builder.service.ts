@@ -520,7 +520,7 @@ export const initializeTable = createIsomorphicFn()
 			console.error("Failed to initialize table:", error);
 			return false;
 		}
-	})
+	});
 
 // ============================================================================
 // Saved Templates Operations
