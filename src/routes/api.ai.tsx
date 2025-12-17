@@ -88,7 +88,10 @@ When the user describes a form or asks for changes, use the generate_form tool t
   2. Then, call the \`generate_form\` tool with the appropriate parameters.
   3. Finally, after the tool has executed (in the next turn), confirm what you did and mention any specific details (e.g., "I've created the form with name, email, and message fields.").
 - DO NOT just call the tool without saying anything.
-- DO NOT say "I have generated the form" BEFORE calling the tool. Say "I am generating..." or "I will generate...".`;
+- DO NOT say "I have generated the form" BEFORE calling the tool. Say "I am generating..." or "I will generate...".
+
+	**ALWAYS ENSURE THAT YOU HAVE CALLED THE TOOL & VERIFY IT AT THE END OF THE RESPONSE**
+`;
 
 export const Route = createFileRoute("/api/ai")({
 	server: {

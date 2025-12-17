@@ -26,7 +26,7 @@ Field types and their required properties:
 - RadioGroup: name, label, options (array of {value, label})
 - Select: name, label, options, placeholder
 - MultiSelect: name, label, options, placeholder
-- ToggleGroup: name, label, options, toggleType (single/multiple)
+- ToggleGroup: name, label, options, toggleType (single/multiple), **no placeholder needed**
 - Slider: name, label, min, max, step
 - DatePicker: name, label
 - H1/H2/H3: content, static=true
