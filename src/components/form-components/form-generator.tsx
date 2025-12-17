@@ -50,6 +50,7 @@ export function FormGenerator() {
 	}>({});
 
 	const [chatError, setChatError] = useState<string | null>(null);
+	const [isPending , setIsPending]= useState(false);
 
 	// Normalize field to match Valibot schema requirements
 	const normalizeField = (field: any): any => {
@@ -274,6 +275,10 @@ export function FormGenerator() {
 			// Set error state for UI display
 			toast.error("An error occurred during chat.");
 		},
+		onResponse : () => setIsPending(true),
+		onFinish : () => {
+			setIsPending(false);
+		}
 	});
 
 	// No useEffect needed - the client tool handles the action directly when called
@@ -400,7 +405,6 @@ Include validations for required fields and clear step titles.`,
 																message?: string;
 														  }
 														| undefined;
-													const isPending = !output;
 													const fieldCount = output?.fieldCount || 0;
 													const success = output?.success !== false;
 
