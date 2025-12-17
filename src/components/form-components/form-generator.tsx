@@ -20,6 +20,8 @@ import {
 } from "@/services/form-builder.service";
 import { cn } from "@/utils/utils";
 import { toast } from "sonner";
+import { Streamdown } from "streamdown";
+
 
 const formGeneratorSchema = z.object({
 	input: z.string().min(1, "Please describe your form"),
@@ -375,7 +377,7 @@ Include validations for required fields and clear step titles.`,
 											{message.parts.map((part, idx) => {
 												if (part.type === "text") {
 													return (
-														<div
+														<Streamdown
 															key={idx}
 															className={`text-sm p-3 rounded-lg ${
 																message.role === "user"
@@ -384,7 +386,7 @@ Include validations for required fields and clear step titles.`,
 															}`}
 														>
 															{part.content}
-														</div>
+														</Streamdown>
 													);
 												}
 												if (
