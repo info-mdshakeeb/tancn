@@ -1,6 +1,6 @@
 import { clientTools } from "@tanstack/ai-client";
 import { fetchServerSentEvents, useChat } from "@tanstack/ai-react";
-import { Loader2, Send, Sparkles, User } from "lucide-react";
+import { AlertTriangle, Circle, Loader2, Send, Sparkles, Square, User, X } from "lucide-react";
 import { useState } from "react";
 import { v4 as uuid } from "uuid";
 import * as z from "zod";
@@ -18,6 +18,8 @@ import {
 	setFormName,
 	setIsMS,
 } from "@/services/form-builder.service";
+import { cn } from "@/utils/utils";
+import { toast } from "sonner";
 
 const formGeneratorSchema = z.object({
 	input: z.string().min(1, "Please describe your form"),
@@ -44,6 +46,8 @@ export function FormGenerator() {
 		title?: string;
 		description?: string;
 	}>({});
+
+	const [chatError, setChatError] = useState<string | null>(null);
 
 	// Normalize field to match Valibot schema requirements
 	const normalizeField = (field: any): any => {
@@ -169,25 +173,55 @@ export function FormGenerator() {
 		return groupFields(withIds);
 	};
 
+	// Check if elements already have H1 and FieldDescription at the start
+	const hasHeaderElements = (elements: any[]): boolean => {
+		if (elements.length < 2) return false;
+		const first = Array.isArray(elements[0]) ? elements[0][0] : elements[0];
+		const second = Array.isArray(elements[1]) ? elements[1][0] : elements[1];
+		return first?.fieldType === "H1" && second?.fieldType === "FieldDescription";
+	};
+
+	// Create header elements from title and description
+	const createHeaderElements = (title: string, description: string): any[] => {
+		return [
+			{
+				id: uuid(),
+				name: `H1_${Date.now()}`,
+				static: true,
+				content: title,
+				fieldType: "H1",
+			},
+			{
+				id: uuid(),
+				name: `FieldDescription_${Date.now()}`,
+				static: true,
+				content: description,
+				fieldType: "FieldDescription",
+			},
+		];
+	};
+
 	// Client tool that updates form state when AI calls it with generated form data
 	const generateFormTool = generateFormDef.client(
 		({ title, description, isMultiStep, formElements, steps }) => {
-			console.log("Client: generate_form called with:", {
-				title,
-				description,
-				isMultiStep,
-			});
 
 			try {
 				let fieldCount = 0;
 
 				if (isMultiStep && steps && steps.length > 0) {
 					// Multi-step form: convert steps to form elements with stepFields
-					const stepsWithIds = steps.map((step: any) => ({
-						id: step.id || uuid(),
-						stepFields: processElements(step.stepFields || []),
-					}));
-
+					// Add header elements to the first step if not present
+					const stepsWithIds = steps.map((step: any, index: number) => {
+						let stepFields = processElements(step.stepFields || []);
+						// Add header to first step only if not already present
+						if (index === 0 && title && description && !hasHeaderElements(stepFields)) {
+							stepFields = [...createHeaderElements(title, description), ...stepFields];
+						}
+						return {
+							id: step.id || uuid(),
+							stepFields,
+						};
+					});
 					// Set multi-step mode first
 					setIsMS(true);
 					setFormElements(stepsWithIds as any);
@@ -197,11 +231,12 @@ export function FormGenerator() {
 					);
 				} else if (formElements && formElements.length > 0) {
 					// Single-page form
-					const elementsWithIds = processElements(formElements);
-					console.log(
-						"Setting form elements:",
-						JSON.stringify(elementsWithIds, null, 2),
-					);
+					let elementsWithIds = processElements(formElements);
+
+					// Prepend header elements if not already present
+					if (title && description && !hasHeaderElements(elementsWithIds)) {
+						elementsWithIds = [...createHeaderElements(title, description), ...elementsWithIds];
+					}
 
 					// setFormElements also sets isMS internally based on the structure
 					setFormElements(elementsWithIds as any);
@@ -221,7 +256,6 @@ export function FormGenerator() {
 					fieldCount,
 				};
 			} catch (error) {
-				console.error("Error updating form:", error);
 				return {
 					success: false,
 					message: `Error: ${error}`,
@@ -231,31 +265,12 @@ export function FormGenerator() {
 		},
 	);
 
-	const { messages, sendMessage, isLoading } = useChat({
+	const { messages, sendMessage, isLoading , stop} = useChat({
 		connection: fetchServerSentEvents("/api/ai"),
 		tools: clientTools(generateFormTool),
-		onError: (err) => {
-			// Set the error on the form using the correct structure
-			formGeneratorForm.setErrorMap({
-				onDynamic: {
-					fields: {
-						input: {
-							message: err.message || "An error occurred during chat.",
-						},
-					},
-				},
-			});
-
-			// Mark the field as touched so the error shows and border turns red
-			const fieldInfo = formGeneratorForm.getFieldInfo("input");
-			if (fieldInfo?.instance) {
-				fieldInfo.instance.setMeta((prev) => ({
-					...prev,
-					isTouched: true,
-				}));
-			}
-
-			console.error("Chat error:", err);
+		onError: () => {
+			// Set error state for UI display
+			toast.error("An error occurred during chat.");
 		},
 	});
 
@@ -268,7 +283,7 @@ export function FormGenerator() {
 					<Badge variant="secondary">Beta</Badge>
 				</h3>
 				<p className="text-sm text-muted-foreground">
-					{formMetadata.description || "Generate forms with AI"}
+					{"Generate forms with AI"}
 				</p>
 			</div>
 
@@ -282,21 +297,41 @@ export function FormGenerator() {
 								</h2>
 							</div>
 
-							<div className="space-y-2">
+							<div className="">
 								{[
-									"Contact form with name, email, and message",
-									"Job application form with resume upload",
-									"Feedback survey with rating scale",
-									"Event registration form with payment details",
-									"Login form with email and password",
+									{
+										title: "Multi-Step Job Application",
+										prompt: `Generate a multi-step job application form.
+Step 1: Personal info (first name and last name side by side, email, phone).
+Step 2: Education (school name, degree, graduation year).
+Step 3: Work experience (company name, job title, start and end dates side by side).
+Step 4: Skills (checkboxes for HTML, CSS, JavaScript, React, Node.js).
+Include validations for required fields and clear step titles.`,
+									},
+									{
+										title: "Side-by-Side Contact Form",
+										prompt: `Create a contact form with first name and last name side by side, email below, then city, state, and zip code all side by side, followed by a message textarea and a terms checkbox.`,
+									},
+									{
+										title: "Dynamic Team Members (Field Array)",
+										prompt: `Create a team registration form with a field array for team members. Each team member entry should have name, email, and role fields. Also include a team name field at the top.`,
+									},
+									{
+										title: "Event Registration with Payment",
+										prompt: `Generate an event registration form with attendee name, email, phone, ticket type (select: VIP, Standard, Student), number of tickets (slider 1-10), dietary restrictions (checkboxes), and a special requests textarea.`,
+									},
+									{
+										title: "Simple Login Form",
+										prompt: `Create a login form with email and password fields, a "Remember me" checkbox, and make both email and password required.`,
+									},
 								].map((suggestion, i) => (
 									<Button
 										key={i}
 										variant="ghost"
-										onClick={() => sendMessage(suggestion)}
-										className="w-full text-left p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-sm text-muted-foreground hover:text-foreground"
+										onClick={() => formGeneratorForm.setFieldValue("input", suggestion.prompt)}
+										className={cn("flex flex-start justify-start w-full text-left bg-background pl-1 py-1 rounded-none",i !== 4 ? "border-b" : "")}
 									>
-										{suggestion}
+										<span className="font-medium text-left text-foreground">{suggestion.title}</span>
 									</Button>
 								))}
 							</div>
@@ -424,49 +459,71 @@ export function FormGenerator() {
 						<formGeneratorForm.AppField name="input">
 							{(field) => (
 								<field.Field>
-									<Textarea
-										name="input"
-										placeholder="Describe your form..."
-										className="min-h-[100px] resize-none pr-12 pb-12 bg-muted/50 border-none focus-visible:ring-1"
-										value={field.state.value}
-										onBlur={field.handleBlur}
-										onChange={(e) => field.handleChange(e.target.value)}
-										onKeyDown={(e) => {
-											if (e.key === "Enter" && !e.shiftKey) {
-												e.preventDefault();
-												formGeneratorForm.handleSubmit();
-											}
-										}}
-									/>
+									<div className={cn(
+										"relative rounded-lg border bg-muted focus-within:ring-1 focus-within:ring-ring",
+										chatError ? "border-destructive dark:border-destructive" : "border-input"
+									)}>
+										{/* Error Banner inside container */}
+										{/* {chatError && (
+											<div className="flex items-center justify-between gap-2 px-1 py-1 text-sm bg-destructive dark:bg-destructive/30 border-b border-destructive/20 dark:border-destructive/80 text-destructive dark:text-destructive rounded-t-lg">
+												<div className="flex items-center gap-2">
+													<AlertTriangle className="w-2 h-2 flex-shrink-0" />
+													<span className="truncate text-destructive-foreground">{chatError}</span>
+												</div>
+												<Button
+													type="button"
+													variant="ghost"
+													size="icon"
+													className="h-2 w-2 pr-3 text-destructive-foreground hover:text-destructive-foreground"
+													onClick={() => setChatError(null)}
+												>
+													<X className="w-2 h-2" />
+												</Button>
+											</div>
+										)} */}
+
+										<Textarea
+											name="input"
+											placeholder="Describe your form..."
+											className="min-h-[100px] resize-none pr-12 pb-12 bg-transparent border-none focus-visible:ring-0 shadow-none"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(e) => {
+												field.handleChange(e.target.value);
+												// Clear error when user starts typing
+												if (chatError) setChatError(null);
+											}}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" && !e.shiftKey) {
+													e.preventDefault();
+													formGeneratorForm.handleSubmit();
+												}
+											}}
+										/>
+									</div>
 								</field.Field>
 							)}
 						</formGeneratorForm.AppField>
 
-						<div className="absolute bottom-3 left-3 flex gap-2">
-							{/* <Button
+						{isLoading ? (
+							<Button
 								type="button"
-								variant="outline"
-								size="sm"
-								className="h-7 text-xs gap-1.5"
-								onClick={() => window.location.reload()}
+								size="icon"
+								variant="destructive"
+								onClick={() => stop()}
+								className="absolute bottom-3 right-3 h-8 w-8 rounded-lg"
 							>
-								<Sparkles className="w-3 h-3" />
-								New chat
-							</Button> */}
-							{/* <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-								<Image className="w-3 h-3" />
-								Image
-							</Button> */}
-						</div>
-
-						<Button
-							type="submit"
-							size="icon"
-							disabled={isLoading}
-							className="absolute bottom-3 right-3 h-8 w-8 rounded-lg"
-						>
-							<Send className="w-4 h-4" />
-						</Button>
+								<Circle className="w-4 h-4 animate-spin" />
+							</Button>
+						) : (
+							<Button
+								type="submit"
+								size="icon"
+								className="absolute bottom-3 right-3 h-8 w-8 rounded-lg"
+							>
+								<Send className="w-4 h-4" />
+							</Button>
+						)}
 					</formGeneratorForm.Form>
 				</formGeneratorForm.AppForm>
 			</div>

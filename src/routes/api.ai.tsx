@@ -94,11 +94,12 @@ export const Route = createFileRoute("/api/ai")({
 	server: {
 		handlers: {
 			POST: async ({ request, context }) => {
+				try {
 				const ip = request.headers.get("cf-connecting-ip") || "unknown";
 				const { success } = await context.env.AI_RATE_LIMITER.limit({
 					key: ip,
 				});
-				console.log("🚀 ~ success:", success, ip);
+
 				if (!success) {
 					return new Response("Rate limit exceeded. Try again later.", {
 						status: 429,
@@ -124,8 +125,8 @@ export const Route = createFileRoute("/api/ai")({
 					conversationId: string;
 				};
 
-				try {
 					// Create a streaming chat response
+
 					const stream = chat({
 						adapter: gemini({
 							maxRetries: 2,
@@ -137,8 +138,6 @@ export const Route = createFileRoute("/api/ai")({
 						providerOptions: {
 							generationConfig: {},
 						},
-						agentLoopStrategy: ({ iterationCount, finishReason }) =>
-							iterationCount >= 2 || finishReason !== undefined,
 						abortController: abortController,
 						tools: [generateFormDef],
 						systemPrompts: [SYSTEM_PROMPT],
@@ -153,6 +152,7 @@ export const Route = createFileRoute("/api/ai")({
 						}),
 						{
 							status: 500,
+							statusText : error.message,
 							headers: { "Content-Type": "application/json" },
 						},
 					);
@@ -160,4 +160,4 @@ export const Route = createFileRoute("/api/ai")({
 			},
 		},
 	},
-});
+})
