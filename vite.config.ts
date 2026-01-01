@@ -22,7 +22,7 @@ const config = defineConfig({
 				host: 'https://tancn.dev/',
 			},
 			prerender : {
-				enabled: true,
+				enabled: false,
 				concurrency : 3
 			}
 		}),
